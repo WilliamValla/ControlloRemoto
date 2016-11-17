@@ -25,7 +25,7 @@ class gpu_texture
 public:
 	gpu_texture() : m_texture() {}
 	gpu_texture(ID3D11Texture2D* texture2D) : m_texture(texture2D) {}
-	gpu_texture(uint16_t width, uint16_t height, COLOR_SPACE_FORMAT color_format, RESOURCE_USAGE usage = RESOURCE_USAGE_GPU_READ_WRITE, RESOURCE_CPU_ACCESS cpu_access = RESOURCE_CPU_ACCESS_NONE);
+	gpu_texture(uint16_t width, uint16_t height, COLOR_SPACE_FORMAT color_format, RESOURCE_USAGE usage = RESOURCE_USAGE_GPU_READ_WRITE, RESOURCE_CPU_ACCESS cpu_access = RESOURCE_CPU_ACCESS_NONE, bool render_target = false);
 	gpu_texture(const gpu_texture& other) : m_texture(other.m_texture) {}
 	gpu_texture(gpu_texture&& other) : m_texture(std::move(other.m_texture)) {}
 

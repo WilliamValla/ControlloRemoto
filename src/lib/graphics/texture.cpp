@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-crlib::gpu_texture::gpu_texture(uint16_t width, uint16_t height, COLOR_SPACE_FORMAT color_format, RESOURCE_USAGE usage, RESOURCE_CPU_ACCESS cpu_acces) :
+crlib::gpu_texture::gpu_texture(uint16_t width, uint16_t height, COLOR_SPACE_FORMAT color_format, RESOURCE_USAGE usage, RESOURCE_CPU_ACCESS cpu_acces, bool render_target) :
 	m_texture()
 {
 	D3D11_TEXTURE2D_DESC tex_desc = { 0 };
@@ -14,7 +14,7 @@ crlib::gpu_texture::gpu_texture(uint16_t width, uint16_t height, COLOR_SPACE_FOR
 	tex_desc.SampleDesc.Count = 1;
 	tex_desc.SampleDesc.Quality = 0;
 	tex_desc.Usage = static_cast<D3D11_USAGE>(usage);
-	tex_desc.BindFlags = 0;
+	tex_desc.BindFlags = render_target ? D3D11_BIND_RENDER_TARGET : 0;
 	tex_desc.CPUAccessFlags = static_cast<D3D11_CPU_ACCESS_FLAG>(cpu_acces);
 	tex_desc.MiscFlags = 0;
 

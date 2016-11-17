@@ -4,7 +4,7 @@
 
 crlib::desktop_duplication::desktop_duplication() :
 	m_dxgi_duplication(),
-	m_frame()
+	m_frame(nullptr)
 {
 	com_ptr<ID3D11Device> device = d3d_context::device();
 
@@ -37,14 +37,15 @@ crlib::desktop_duplication::desktop_duplication() :
 	DXGI_OUTDUPL_DESC output_desc = { 0 };
 	m_dxgi_duplication->GetDesc(&output_desc);
 
-	m_frame = gpu_texture(output_desc.ModeDesc.Width, output_desc.ModeDesc.Height, static_cast<COLOR_SPACE_FORMAT>(output_desc.ModeDesc.Format), RESOURCE_USAGE_CPU_COPY, RESOURCE_CPU_ACCESS_READ);
+	m_frame = new gpu_texture(output_desc.ModeDesc.Width, output_desc.ModeDesc.Height, crlib::COLOR_SPACE_FORMAT_BGRA, crlib::RESOURCE_USAGE_CPU_COPY, crlib::RESOURCE_CPU_ACCESS_READ);
 }
 
-bool crlib::desktop_duplication::aquire_frame(uint32_t timeout)
+crlib::gpu_texture* crlib::desktop_duplication::aquire_frame(uint32_t timeout)
 {
 	com_ptr<IDXGIResource> desktop_resource;
 	DXGI_OUTDUPL_FRAME_INFO frame_info = { 0 };
 
+	m_dxgi_duplication->ReleaseFrame();
 	HRESULT hresult = m_dxgi_duplication->AcquireNextFrame(timeout, &frame_info, &desktop_resource);
 
 	if (FAILED(hresult))
@@ -57,7 +58,7 @@ bool crlib::desktop_duplication::aquire_frame(uint32_t timeout)
 			break;
 
 		case DXGI_ERROR_WAIT_TIMEOUT:
-			return false;
+			return nullptr;
 
 		default:
 			throw std::runtime_error("AcquireNextFrame failed");
@@ -65,16 +66,12 @@ bool crlib::desktop_duplication::aquire_frame(uint32_t timeout)
 		}
 	}
 
-	bool result = false;
-
 	if (frame_info.LastPresentTime.QuadPart != 0)
 	{
-		gpu_texture frame;
-		desktop_resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&(frame.handle())));
-		frame.copy_to(m_frame);
-		result = true;
+		gpu_texture* frame = new gpu_texture;
+		desktop_resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&(frame->handle())));
+		return frame;
 	}
 
-	m_dxgi_duplication->ReleaseFrame();
-	return result;
+	return nullptr;
 }

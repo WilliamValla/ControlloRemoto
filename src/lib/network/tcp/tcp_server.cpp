@@ -1,42 +1,19 @@
 #include "tcp_server.h"
 
-#include <utility>
-
-crlib::tcp_server::tcp_server(const ip_address& local_ip) :
-	m_socket(SOCKET_PROTOCOL_TCP)
+crlib::tcp_server::tcp_server(const ip_address& local_ip)  :
+	socket(SOCKET_PROTOCOL::TCP)
 {
-	m_socket.bind(local_ip);
-	m_socket.listen();
+	bind(local_ip);
+	listen();
 }
 
-crlib::tcp_server::tcp_server(const std::string& ip, uint16_t port) :
-	tcp_server(ip_address(ip, port))
+void crlib::tcp_server::start_listen(const crlib::ip_address& ip)
 {
+	bind(ip);
+	listen();
 }
 
-crlib::tcp_server::tcp_server(const tcp_server& other) :
-	m_socket(other.m_socket)
+crlib::tcp_client* crlib::tcp_server::accept()
 {
-}
-
-crlib::tcp_server::tcp_server(tcp_server&& other) :
-	m_socket(std::move(other.m_socket))
-{
-}
-
-crlib::tcp_server& crlib::tcp_server::operator=(tcp_server other)
-{
-	swap(*this, other);
-	return *this;
-}
-
-void crlib::tcp_server::close()
-{
-	m_socket.close();
-}
-
-void crlib::swap(tcp_server & a, tcp_server & b)
-{
-	using std::swap;
-	swap(a.m_socket, b.m_socket);
+	return reinterpret_cast<tcp_client*>(socket::accept());
 }

@@ -6,10 +6,10 @@
 namespace crlib
 {
 
-enum SOCKET_PROTOCOL
+enum class SOCKET_PROTOCOL
 {
-	SOCKET_PROTOCOL_TCP,
-	SOCKET_PROTOCOL_UDP
+	TCP,
+	UDP
 };
 
 /*
@@ -22,16 +22,15 @@ public:
 	socket(SOCKET_PROTOCOL protocol);
 	socket(const socket& other);
 	socket(socket&& other);
-
 	socket& operator=(socket other);
 
-	void connect(const ip_address& remote_addr);
-	void disconnect();
+	ip_address& local_ip() { return m_local_ip; }
+	const ip_address& local_ip() const { return m_local_ip; }
+	ip_address& remote_ip() { return m_remote_ip; }
+	const ip_address& remote_ip() const { return m_remote_ip; }
 
-	void bind(const ip_address& local_addr);
-	void listen();
+	intptr_t descriptor() const { return m_socket; }
 
-	socket accept();
 
 	size_t send(const char* buf, size_t size);
 	size_t send_to(const char* buf, size_t size, const ip_address& dest);
@@ -41,13 +40,20 @@ public:
 
 	void close();
 
-	ip_address& local_ip() { return m_local_ip; }
-	const ip_address& local_ip() const { return m_local_ip; }
-	ip_address& remote_ip() { return m_remote_ip; }
-	const ip_address& remote_ip() const { return m_remote_ip; }
-	intptr_t descriptor() const { return m_socket; }
-
 	friend void swap(socket& a, socket& b);
+
+protected:
+	uintptr_t m_socket;
+	ip_address m_local_ip;
+	ip_address m_remote_ip;
+
+	void connect(const ip_address& remote_addr);
+	void disconnect();
+
+	void bind(const ip_address& local_addr);
+	void listen();
+
+	socket* accept();
 
 private:
 	struct winsock_initializer
@@ -57,9 +63,6 @@ private:
 	}; 
 
 	static winsock_initializer m_initializer;
-	uintptr_t m_socket;
-	ip_address m_local_ip;
-	ip_address m_remote_ip;
 
 	socket() : m_socket(0) {}
 	socket(uintptr_t descriptor, const ip_address& local, const ip_address& remote) : m_socket(descriptor), m_local_ip(local), m_remote_ip(remote) {}

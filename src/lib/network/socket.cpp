@@ -31,12 +31,12 @@ crlib::socket::socket(SOCKET_PROTOCOL protocol) :
 
 	switch (protocol)
 	{
-	case SOCKET_PROTOCOL_TCP:
+	case SOCKET_PROTOCOL::TCP:
 		sock_type = SOCK_STREAM;
 		sock_proto = IPPROTO_TCP; 
 		break;
 
-	case SOCKET_PROTOCOL_UDP:
+	case SOCKET_PROTOCOL::UDP:
 		sock_type = SOCK_DGRAM;
 		sock_proto = IPPROTO_UDP;
 		break;
@@ -88,6 +88,19 @@ void crlib::socket::connect(const ip_address& remote_addr)
 	}
 
 	m_remote_ip = remote_addr;
+
+	if (m_local_ip == ip_address())
+	{
+		ZeroMemory(&addr, sizeof(sockaddr_in));
+		int addr_len = sizeof(sockaddr_in);
+
+		if (::getsockname(m_socket, reinterpret_cast<sockaddr*>(&addr), &addr_len) == SOCKET_ERROR)
+		{
+			throw std::runtime_error("getsockname failed");
+		}
+
+		m_local_ip = ip_address(addr.sin_addr.S_un.S_addr, addr.sin_port);
+	}
 }
 
 void crlib::socket::disconnect()
@@ -138,7 +151,7 @@ void crlib::socket::listen()
 	}
 }
 
-crlib::socket crlib::socket::accept()
+crlib::socket* crlib::socket::accept()
 {
 	sockaddr_in remote_addr = { 0 };
 	int size = sizeof(sockaddr_in);
@@ -149,7 +162,7 @@ crlib::socket crlib::socket::accept()
 		throw std::runtime_error("accpet call on socket failed");
 	}
 
-	return socket(remote_sock, ip_address(remote_addr.sin_addr.S_un.S_addr, remote_addr.sin_port), m_local_ip);
+	return new socket(remote_sock, ip_address(remote_addr.sin_addr.S_un.S_addr, remote_addr.sin_port), m_local_ip);
 }
 
 size_t crlib::socket::send(const char* buf, size_t size)

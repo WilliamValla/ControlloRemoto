@@ -1,14 +1,15 @@
 #include "ip_address.h"
 
+#include <functional>
 #include <Ws2tcpip.h>
 
-crlib::ip_address::ip_address(const std::string& str, uint16_t port) :
+crlib::ip_address::ip_address(string str, uint16_t port) :
 	m_address(0),
 	m_port(htons(port))
 {
 	IN_ADDR addr = { 0 };
 
-	if (InetPton(AF_INET, str.c_str(), &addr) != 1)
+	if (InetPtonW(AF_INET, str.data(), &addr) != 1)
 	{
 		throw std::runtime_error("Could not convert string to ip address");
 	}
@@ -27,12 +28,12 @@ uint16_t crlib::ip_address::port() const
 	return ntohs(m_port);
 }
 
-std::string crlib::ip_address::to_string() const
+crlib::string crlib::ip_address::to_string() const
 {
-	char buff[16] = { 0 };
+	wchar_t buff[16] = { 0 };
 	uint32_t addr_copy = m_address;
-	InetNtop(AF_INET, &addr_copy, buff, 16);
-	return std::string(buff);
+	InetNtopW(AF_INET, &addr_copy, buff, 16);
+	return string(buff);
 }
 
 void crlib::swap(ip_address& a, ip_address& b)
@@ -42,8 +43,13 @@ void crlib::swap(ip_address& a, ip_address& b)
 	swap(a.m_port, b.m_port);
 }
 
-std::ostream& crlib::operator<<(std::ostream& stream, const crlib::ip_address& ip)
+std::wostream& crlib::operator<<(std::wostream& stream, const crlib::ip_address& ip)
 {
 	stream << ip.to_string() << ":" << ip.port();
 	return stream;
+}
+
+size_t std::hash<crlib::ip_address>::operator()(const crlib::ip_address& ip) const
+{
+	return ip.address() ^ ip.net_port();
 }

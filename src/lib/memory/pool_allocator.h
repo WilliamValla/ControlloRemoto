@@ -13,7 +13,6 @@ An std compliant allocator, that pre-allocates N blocks of
 memory for an object T. Memory is allocation/deallocation
 is thread safe.
 */
-
 template<typename T, size_t Size>
 class pool_allocator
 {
